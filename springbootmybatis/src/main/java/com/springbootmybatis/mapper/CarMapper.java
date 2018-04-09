@@ -3,6 +3,7 @@ package com.springbootmybatis.mapper;
 import com.springbootmybatis.domain.Car;
 import org.apache.ibatis.annotations.*;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -15,6 +16,10 @@ public interface CarMapper {
             @Result(property = "createDate",column = "create_date")
     })
     List<Car> find();
+
+    List<Car> findByParam(@Param("name")String name,
+                          @Param("beginDate")Date beginDate,
+                          @Param("endDate")Date endDate);
 
     @Select("select id,name,price,create_date createDate from car where id=#{id}")
     Car findById(Integer id);

@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Carlist</title>
+    <link rel="short icon" href="images/ab2.png">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+    <br>
+    <h1>小汽车 前端服务器</h1>
+    <br>
+    <div class="row">
+        <input type="text" id="carname" name="carname" class="col-sm-3 form-control" placeholder="车名"
+               style="margin-left: 70px">&nbsp;
+        <input type="date" id="begindate" name="begindate" class="col-sm-3 form-control">&nbsp;
+        <input type="date" id="enddate" name="enddate" class="col-sm-3 form-control">&nbsp;
+        &nbsp;
+        <button class="btn btn-primary" id="btnquery">查询</button>
+    </div>
+    <br>
+    <table class="table table-hover table-striped">
+        <thead>
+        <tr>
+            <th class="text-center">车名</th>
+            <th class="text-center">价格</th>
+            <th class="text-center">生产日期</th>
+            <th class="text-center">操作</th>
+        </tr>
+        </thead>
+
+        <tbody id="tbody">
+
+        </tbody>
+
+        <tfoot>
+        <tr>
+            <th class="text-center">车名</th>
+            <th class="text-center">价格</th>
+            <th class="text-center">生产日期</th>
+            <th class="text-center">操作</th>
+        </tr>
+        </tfoot>
+
+    </table>
+    <hr>
+
+    <div class="form-group col-sm-6" style="margin: auto">
+        <label>车名：</label>
+        <input id="id" type="hidden">
+        <input id="name" type="text" class="form-control col-sm-12" placeholder="车名" required>
+    </div>
+
+    <div class="form-group col-sm-6" style="margin: auto">
+        <label>价格：</label>
+        <input id="price" type="number" class="form-control col-sm-12" step="0.01" placeholder="价格" required>
+    </div>
+
+    <div class="form-group col-sm-6" style="margin: auto">
+        <label>生产日期：</label>
+        <input id="createDate" type="date" class="form-control col-sm-12">
+    </div>
+    <br>
+    <button id="btnAdd" class="btn btn-info btn-block col-sm-6" type="button" style="margin: auto">新增</button><br>
+    <button id="btnModify" class="btn btn-success btn-block col-sm-6" type="button" style="margin: auto">修改</button>
+    <br><br><br><br>
+
+
+</div>
+<script src="js/jquery-3.2.1.min.js"></script>
+<script>
+
+    const url = "http://127.0.0.1:8086/api/"
+
+    // 设置修改按钮不可用
+    $("#btnModify").attr("disabled","")
+
+    $(window).on("load", () => {
+        carlist()
+
+        // 注册修改保存点击事件
+        $("#btnModify").click(()=>{
+            var formdata = {
+                id : $("#id").val(),
+                name : $("#name").val(),
+                price : $("#price").val(),
+                createDate : $("#createDate").val(),
+            }
+            console.log("修改保存",formdata)
+            $.ajax({
+                url : url+"cars",
+                type : "put",
+                contentType: "application/json",
+                data : JSON.stringify(formdata),
+                dataType : "json",
+                success : function (data) {
+                    alert(data.message)
+                    window.location.reload()
+                }
+            })
+        })
+
+        // 注册新增按钮点击事件
+        $("#btnAdd").click(()=>{
+            var formdata = {
+                name : $("#name").val(),
+                price : $("#price").val(),
+                createDate : $("#createDate").val(),
+            }
+            console.log("新增",formdata)
+            $.ajax({
+                url : url+"cars",
+                type : "post",
+                contentType: "application/json",
+                data : JSON.stringify(formdata),
+                dataType : "json",
+                success : function (data) {
+                    alert(data.message)
+                    window.location.reload()
+                }
+            })
+        })
+
+    })
+
+    $("#btnquery").click(() => {
+        carlist()
+    })
+
+    function carlist() {
+        var formdata = {
+            name: $("#carname").val(),
+            beginDate: $("#begindate").val(),
+            endDate: $("#enddate").val(),
+        }
+        $("#tbody").empty()
+        console.log("查询",formdata)
+        var text = ``
+        $.ajax({
+            url: url + "cars",
+            type: "get",
+            data: formdata,
+            dataType: "json",
+            success: function (data) {
+                //console.log(data)
+                if (data.code && data.code == 400) {
+                    text += `
+                    <tr class="text-center">
+                    <td colspan="4">${data.message}</td>
+                    </tr>
+                   `
+                    $("tbody").append(text)
+                    return
+                }
+                $.each(data,(i,item)=>{
+
+                    text += `
+                    <tr class="text-center" id="${item.id}">
+                        <td>${item.name}</td>
+                        <td>${item.price}</td>
+                        <td>${item.createDate}</td>
+                        <td>
+                        <button class="btn btn-primary" onclick="modifycar(${item.id})">修改</button>
+                        <button class="btn btn-danger" onclick="removecar(${item.id},'${item.name}')">删除</button>
+                        </td>
+                    </tr>
+
+                    `
+                })
+                $("#tbody").append(text)
+            }
+        })
+        $("#carname").val("")
+        $("#begindate").val("")
+        $("#enddate").val("")
+
+    }
+
+    // 修改，根据ID 查询
+    function modifycar(id) {
+        console.log("修改id="+id)
+        $.ajax({
+            url : url+"cars/"+id,
+            type : "get",
+            dataType: "json",
+            success : function (data) {
+                console.log(data)
+                if(data){
+                    // 新增按钮不可用
+                    $("#btnAdd").attr("disabled","")
+                    // 修改按钮可用
+                    $("#btnModify").removeAttr("disabled")
+
+                    $("#id").val(data.id)
+                    $("#name").val(data.name)
+                    $("#price").val(data.price)
+                    $("#createDate").val(data.createDate)
+                }
+            }
+        })
+    }
+
+    // 删除方法
+    function removecar(id,name) {
+        if(confirm("确定删除"+name+"吗？")){
+            console.log("删除id"+id)
+            $.ajax({
+                url : url+"cars/"+id,
+                type : "delete",
+                dataType : "json",
+                success : function (data) {
+                    if(data.code == 200){
+                        $("#" + id).remove()
+                    }else{
+                        alert(data.message)
+                    }
+                }
+            })
+        }
+    }
+
+</script>
+</body>
+</html>

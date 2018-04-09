@@ -12,3 +12,4 @@ spring:
     password: root
 mybatis:
   type-aliases-package: com.springbootmybatis.domain
+  mapper-locations: mybatis/mapper/CarMapper.xml

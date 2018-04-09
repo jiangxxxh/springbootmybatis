@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -18,6 +19,10 @@ public class CarService {
 
     public List<Car> find(){
         return carMapper.find();
+    }
+
+    public List<Car> find(String name, Date beginDate,Date endDate){
+        return carMapper.findByParam(name, beginDate, endDate);
     }
 
     public Car find(Integer id){

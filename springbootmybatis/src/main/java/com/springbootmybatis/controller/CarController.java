@@ -4,14 +4,16 @@ import com.springbootmybatis.domain.Car;
 import com.springbootmybatis.domain.CustomType;
 import com.springbootmybatis.service.CarService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.List;
 
 @RestController
-@CrossOrigin()
+@CrossOrigin(origins = "http://127.0.0.1:8080", maxAge = 3600)
 @RequestMapping("/api")
 public class CarController {
 
@@ -19,8 +21,15 @@ public class CarController {
     private CarService carService;
 
     @RequestMapping(value = "/cars",method = RequestMethod.GET)
-    public ResponseEntity<?> getCars(){
-        List<Car> cars = carService.find();
+    public ResponseEntity<?> getCars(
+            @RequestParam(value = "name",required = false)String name,
+            @RequestParam(value = "beginDate",required = false)
+                    @DateTimeFormat(pattern = "yyyy-MM-dd") Date beginDate,
+            @RequestParam(value = "endDate",required = false)
+                    @DateTimeFormat(pattern = "yyyy-MM-dd")Date endDate
+    ){
+        System.out.println(name+" "+beginDate+" "+endDate);
+        List<Car> cars = carService.find(name, beginDate, endDate);
         if(cars.isEmpty()){
             return new ResponseEntity<>(new CustomType(400,"没有匹配的结果"),HttpStatus.OK);
         }
